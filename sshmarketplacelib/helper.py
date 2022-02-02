@@ -117,6 +117,7 @@ class Util(object):
         df_items= pd.concat(dfs)
         a_sources=df_items
         #a_sources=df_items.drop_duplicates(['source.label','label'])
+        a_sources['source.label']= a_sources['source.label'].apply(lambda y: 'NA' if pd.isnull(y) else y )
         df_item_sources = a_sources['source.label'].value_counts()
         return df_item_sources
     
