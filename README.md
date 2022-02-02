@@ -82,7 +82,7 @@ To install the library enter cloned directory and install it via pip with explic
 - Clone the repository, enter the directory and install requirements:
 ```bash
 git clone https://gitlab.gwdg.de/sshoc/curation.git
-cd curation
+cd marketplace-curation
 pip install ./ -r ./requirements.txt
 ```
 
