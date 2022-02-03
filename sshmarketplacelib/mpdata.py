@@ -166,7 +166,7 @@ class MPData:
                 
                 items= pd.json_normalize(data=temp[category], record_path='properties', meta_prefix='ts_', meta=['label', 'persistentId', 'category'])
                 dfs.append(items)
-        df_items= pd.concat(dfs)
+        df_items= pd.concat(dfs, ignore_index=True)
         if df_items.empty:
             print('Empty dataset')
             return pd.DataFrame()

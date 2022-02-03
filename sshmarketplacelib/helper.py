@@ -114,7 +114,7 @@ class Util(object):
                 category=temp.columns[-1]
                 items= pd.json_normalize(temp[category])
                 dfs.append(items)
-        df_items= pd.concat(dfs)
+        df_items= pd.concat(dfs, ignore_index=True)
         a_sources=df_items
         #a_sources=df_items.drop_duplicates(['source.label','label'])
         a_sources['source.label']= a_sources['source.label'].apply(lambda y: 'NA' if pd.isnull(y) else y )
@@ -169,7 +169,7 @@ class Util(object):
                 category=temp.columns[-1]
                 items= pd.json_normalize(temp[category])
                 dfs.append(items)
-        df_items= pd.concat(dfs)
+        df_items= pd.concat(dfs, ignore_index=True)
         
         
         df_items_abs=df_items.groupby(['category', 'source.label']).count()['label'].unstack('category')
@@ -204,7 +204,7 @@ class Util(object):
                 if not key=='actors' and not key=='list_of_properties' and not key=='login':
                     print(f'{key} dataset is not present')
                 
-        df_items= pd.concat(dfs)
+        df_items= pd.concat(dfs, ignore_index=True)
         cols = df_items.columns.tolist()
         cols = cols[-3:] + cols[:-3]
         df_items=df_items[cols]
@@ -226,7 +226,7 @@ class Util(object):
                 category=temp.columns[-1]
                 items= pd.json_normalize(data=temp[category], record_path='properties', meta_prefix='ts_', meta=['label', 'persistentId', 'category'])
                 dfs.append(items)
-        df_items= pd.concat(dfs)
+        df_items= pd.concat(dfs, ignore_index=True)
         if df_items.empty:
             print('Empty dataset')
             return pd.DataFrame()
@@ -257,7 +257,7 @@ class Util(object):
                 category=temp.columns[-1]
                 items= pd.json_normalize(data=temp[category], record_path='properties', meta_prefix='ts_', meta=['label', 'persistentId', 'category'])
                 dfs.append(items)
-        df_items= pd.concat(dfs)
+        df_items= pd.concat(dfs, ignore_index=True)
         if isinstance(dataset, pd.DataFrame):
             if not dataset.empty:
                 df_list_of_properties_sources_subset=pd.merge(left=dataset, right=df_items, left_on='persistentId', right_on='ts_persistentId')
@@ -290,8 +290,8 @@ class Util(object):
                 properties= pd.json_normalize(data=temp[category], record_path='properties', meta_prefix='ts_', meta=['label'])
                 df_temp_items.append(items)
                 df_temp_properties.append(properties)
-                df_items= pd.concat(df_temp_items)
-                df_properties=pd.concat(df_temp_properties)
+                df_items= pd.concat(df_temp_items, ignore_index=True)
+                df_properties=pd.concat(df_temp_properties, ignore_index=True)
         if (not df_items.empty) and (not df_properties.empty):
             my_tmp=df_items[['persistentId','label', 'source.label', 'category']]
             df_list_of_properties_sources=pd.merge(left=df_properties, right=my_tmp, left_on='ts_label', right_on='label')
@@ -445,7 +445,7 @@ class Util(object):
                 category=temp.columns[-1]
                 items= pd.json_normalize(temp[category])
                 dfs.append(items)
-        df_items= pd.concat(dfs)
+        df_items= pd.concat(dfs, ignore_index=True)
         temp_ed_str=self.empty_description.replace(".","")
         df_items = df_items.replace(self.empty_description, np.nan)
         df_items = df_items.replace(temp_ed_str, np.nan)
@@ -565,7 +565,7 @@ class Util(object):
                 category=temp.columns[-1]
                 items= pd.json_normalize(temp[category])
                 dfs.append(items)
-        df_items= pd.concat(dfs)
+        df_items= pd.concat(dfs, ignore_index=True)
         temp_ed_str=self.empty_description.replace(".","")
         df_items = df_items.replace(self.empty_description, np.nan)
         df_items = df_items.replace(temp_ed_str, np.nan)
@@ -724,7 +724,7 @@ class Util(object):
         if not dfs:
             print ('getRelatedItems(itemcategories, *nrelitems): no values found')
             return pd.DataFrame(columns=returned_fields)
-        df_items= pd.concat(dfs)
+        df_items= pd.concat(dfs, ignore_index=True)
         #return df_items[['item_persistentId', 'item_category', 'item_label', 'relation.label',  'persistentId', 'category', 'label', 'workflowId', 'description', 'relation.code']]
         df_items.rename(columns = {'item_persistentId': 'persistentId', 'item_category':'category', 'item_label':'label','persistentId_y': 'relitem_persistentId', 'category_y': 'relItem_category', 'label_y': 'relItem_label', 'description_y': 'relItem_description'}, inplace = True)
        
@@ -750,7 +750,7 @@ class Util(object):
                 category=temp.columns[-1]
                 items= pd.json_normalize(data=temp[category], record_path='relatedItems', meta_prefix='item_', meta=['label', 'persistentId', 'category'])
                 dfs.append(items)
-        df_items= pd.concat(dfs)
+        df_items= pd.concat(dfs, ignore_index=True)
         #df_items['type.allowedVocabularies'] = df_items['type.allowedVocabularies'].apply(lambda y: np.nan if len(y)==0 else y)
         return df_items[['item_persistentId', 'item_category', 'item_label', 'relation.label',  'persistentId', 'category', 'label', 'workflowId', 'description', 'relation.code']]
     
