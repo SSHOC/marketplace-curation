@@ -9,7 +9,7 @@ API:
   PASSWORD: secretword
 
 MARKETPLACE:
-  SERVER: https://marketplace-api.sshopencloud.eu/
+  SERVER: https://marketplace.sshopencloud.eu/
 
 DATASET_ENTRYPOINTS:
     toolsandservices: api/tools-services 
