@@ -14,9 +14,11 @@ import numpy as np
 import yaml
 import errno
 from datetime import datetime
+from warnings import warn
 
 #from bokeh.util.sampledata import DataFrame
 from http.cookies import _getdate
+from PIL.ImageFilter import DETAIL
 
 class MPData:
     def __init__(self):
@@ -224,17 +226,25 @@ class MPData:
     
     
     def updateURLCurationPropertyJson(self, props, label, value):
-        detail_value=json.loads(props.replace("'", '"'))
-        if not 'url' in detail_value:
-            return 'not found'
-        init_val="{'url': ["+" {'"+label+"': " + "'"+ value.strip() +"'}"+ "] }"
-        print (f"{detail_value['url']} and {label}")
-        for jo in detail_value['url']:
-            if label in jo:
-                del (jo[label])
-                print('here it is '+json.dumps(jo))
-                return 'found'
-            return'no'
+        
+        if (props.strip()!=''):
+            detail_value=json.loads(props.replace("'", '"'))
+        else:
+            pdata={}
+            pvalue={}
+            pdata["length"] = value
+            pvalue[label]=pdata
+            
+            return (json.dumps(pvalue))
+        
+        if not label in detail_value:
+            
+            data = {}
+            data["length"] = value
+            json_data = json.dumps(data)
+            detail_value[label]=json_data
+        print (json.dumps(detail_value))
+        return json.dumps(detail_value)
     
     
     
@@ -258,6 +268,8 @@ class MPData:
         DEPRECATED: this function should not be used, please use: setHTTPStatusFlags(self, dataset, curationFlag, curationDetail) 
         
         """
+        
+        
         
         res=pd.DataFrame()
         if os.path.isfile('data/'+itemscategory+'.pickle'):#local file is explicitly requested and one is available
@@ -399,6 +411,7 @@ class MPData:
     def setPropertyStatusFlags(self, dataset, itemscategory, curationFlag, curationDetail):
         
         """
+        DEPRECATED
         Sets the status flag for items in dataset and updates the MP data.
         
         Parameters:
@@ -416,6 +429,8 @@ class MPData:
         
         """
         
+        raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), "data")
+    
         res=pd.DataFrame()
         if os.path.isfile('data/'+itemscategory+'.pickle'):#local file is explicitly requested
             df_categ_all = pd.read_pickle('data/'+itemscategory+'.pickle')
@@ -711,6 +726,23 @@ class MPData:
         
     #/local functions
     def setPropertyFlags(self, dataset, curationFlag, curationDetail):
+        
+        """
+        Sets the curation flag for items in dataset and updates the MP data.
+        
+        Parameters:
+        -----------
+        
+        dataset: DataFrame
+            The set of items to be flagged
+        curationFlag: String
+            The Curation Flag property
+        curationDetail: String
+            The Curation Detail property
+        
+        When all items have been flagged the function synchronizes the local dataset with the MP data, it may take several minutes to complete.
+               
+        """
         res=pd.DataFrame()
         restoreset=self._getLog()
         bearer=self.getBearer()
@@ -743,7 +775,7 @@ class MPData:
                     vproperty=str(vrow['property'])
                     
                     wrongvals[vproperty]=vvalue
-                    print (f'The property: {vproperty}, has value {vvalue}, in item with pid: {toolpid}, (current version: {currentversion})')
+                    print (f'The property: {vproperty}, has value {vvalue}, in item with pid: {category}/{toolpid}, (current version: {currentversion})')
                     
         
                 for key in wrongvals:
@@ -765,13 +797,13 @@ class MPData:
     
                         if (ind['type']['code']=='curation-detail'):
                             cur_de_val=ind['value']
+                            #print(f'+++++++++++++++++++++++++++ {cur_de_val}')
                             curation_detail_exists=True
                             if vproperty in cur_de_val.strip():
                                 print (f"flag property exists, value:  {ind['value']}")
                                 updateItem=updateItem or False
                             else:
-                                ind['value']=self.createURLCurationProperty(cur_de_val, vproperty, vvalue)
-                                print (f"Appending curation_detail_flag  {self.createURLCurationProperty(cur_de_val, vproperty, vvalue)}")
+                                ind['value']=self.updateURLCurationPropertyJson(cur_de_val, vproperty, vvalue)
                                 updateItem=updateItem or True
                                 
                
@@ -781,8 +813,9 @@ class MPData:
                         updateItem=updateItem or True
     
                     if not curation_detail_exists:
-                        print ('append curation_detail_value')
-                        curation_detail_value={ "type": curationDetail, "value": self.createCurationProperty('', vproperty, vvalue)}
+                        
+                        curation_detail_value={ "type": curationDetail, "value": self.updateURLCurationPropertyJson('', vproperty, vvalue)}
+                        print (f'append curation_detail_value {curation_detail_value}')
                         myrow['properties'].append(curation_detail_value)
                         updateItem=updateItem or True
                             #print (f"{updateItem}, {curation_detail_value}, pid: {toolpid}, \n { myrow['properties']}")
@@ -791,10 +824,6 @@ class MPData:
                     print ('\nRunning in debug mode, Marketplace dataset not updated.')
                    
                     
-                # if updateItem:
-                #     #restoreset=restoreset.append([{'date': _getdate(), 'persistentId': toolpid, 'category':category,'restore_version':currentversion, 'operation':curationFlag['code']}])
-                #     entryline={'date': _getdate(), 'persistentId': toolpid, 'category':category,'restore_version':currentversion, 'operation':curationFlag['code']}
-                #     restoreset=self._addLogentry(restoreset, entryline)
                 if (not self.debug) and updateItem and category.strip()!='':
                     print (f"updating item... ")
                     obj = json.dumps(myrow)
@@ -854,9 +883,6 @@ class MPData:
         return res.T, jo
         
       
-    #/api/tools-services/{persistentId-item1}/merge?with={persistentId-item2}) 
-    #(POST /api/tools-services/merge?with={persistentId-item1},{persistentId-item2}) 
-    #{"code":"curation-flag-merged","label":"Curate merged items","type":"boolean","groupName":"Curation","hidden":true,"ord":39,"allowedVocabularies":[]}
     def postMergedItem(self, item, pids):
         if pids.strip()!='':
             persistentids=pids.replace(" ", "").split(',')
