@@ -249,7 +249,10 @@ class Util(object):
             The dataset where the properties are searched
         
         """
-        
+        returned_values=['id', 'category', 'label', 'persistentId', 'accessibleAt', 'description', 'relatedItems', 'media', 'source.label', 'source.url',
+                         'type.code', 'type.label', 'type.type', 'type.groupName', 'type.allowedVocabularies', 'concept.code', 'concept.vocabulary.code',
+                         'concept.vocabulary.scheme', 'concept.vocabulary.namespace', 'concept.vocabulary.label', 'concept.vocabulary.closed',
+                         'concept.label', 'concept.notation', 'concept.uri', 'concept.candidate', 'value', 'concept.definition']
         dfs=[]
         for key in self.dataset_entrypoints:
             if os.path.isfile('data/'+key+'.pickle') and not key=='actors':
@@ -263,7 +266,7 @@ class Util(object):
                 df_list_of_properties_sources_subset=pd.merge(left=dataset, right=df_items, left_on='persistentId', right_on='ts_persistentId')
                 if 'source.label_x' in df_list_of_properties_sources_subset.columns:
                     df_list_of_properties_sources_subset.rename(columns = {'source.label_x': 'source.label', 'ts_label':'label'}, inplace = True)
-                return df_list_of_properties_sources_subset#[returned_values]
+                return df_list_of_properties_sources_subset[returned_values]
             
         df_items['type.allowedVocabularies'] = df_items['type.allowedVocabularies'].apply(lambda y: np.nan if len(y)==0 else y)
         df_items.rename(columns = {'ts_persistentId': 'persistentId', 'ts_label':'label', 'ts_category':'category'}, inplace = True)

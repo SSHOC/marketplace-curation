@@ -84,27 +84,25 @@ class MPData:
         
         """
         
+        
         Loads data from MP dataset. This method creates a dataframe, stores it in a local repository and returns it to the caller.
         
         Parameters:
         -----------
-        
         itemscategory : str
-            The category of items
+            The category of items, possible values are: "toolsandservices", "publications", "trainingmaterials", "workflows", "dataset"
         localrepository : boolean, optional
-            Indicates if the user wants the local dataset if present, if not present the remote dataset is used 
         pages : int, optional
             The number of pages, default is all
         
         Returns:
         --------
-        
         DataFrame: Returning value
 
-        If the localrepository parameter is 'False' or is defined, the items are downloaded from the MP dataset, 
-        if the localrepository parameter is 'True' the items are first searched in the local repository 
-        and if they are not present they are downloaded from the remote MP dataset. 
-        When the items are downloaded from the remote MP dataset they are stored in the local repository.
+        If the localrepository parameter is 'FALSE' or is not specified, the items are downloaded from the MP dataset, 
+        if the localrepository parameter is 'TRUE' the items are first searched in the local repository and 
+        if they are not present they are downloaded from the remote MP dataset. 
+        When the items are downloaded from the remote MP dataset they are stored in locally.
         If the pages parameter is not provided all descriptions are returned, otherwise 20*pages items are returned.
         
         """
@@ -135,10 +133,13 @@ class MPData:
             start+=1
             mdx = pd.Series(range(start, pages+1))
             for var in mdx:
-    
                 turl = url+"?page="+str(var)+"&perpage=20"
                 #print (f'{var} - {turl}')
-                df_desc_par=pd.read_json(turl, orient='columns')
+                try:
+                    df_desc_par=pd.read_json(turl, orient='columns')
+                except:
+                    print(f'SEVERE: Error getting {itemscategory}, items may be not completely loaded. (Error loading {turl})')
+                    
                 df_desc=df_desc.append(df_desc_par, ignore_index=True)
             category=df_desc.columns[-1]
             items= pd.json_normalize(df_desc[category])
@@ -569,7 +570,7 @@ class MPData:
     def setHTTPStatusFlags(self, dataset, curationFlag, curationDetail):
         
         """
-        Sets the URLStatus flag for items in dataset and updates the MP data.
+        Sets the URL Status flag for items in dataset and updates the MP data.
         
         Parameters:
         -----------
@@ -588,7 +589,10 @@ class MPData:
         res=pd.DataFrame()
         dfs=[]
         bearer=self.getBearer()
+        
         put_headers = {'Content-type': 'application/json', 'Authorization':bearer}
+        
+        properties=dataset.property.unique().tolist();
         for key in self.dataset_entrypoints:
             if os.path.isfile('data/'+key+'.pickle') and not key=='actors':#local file is explicitly requested and one is available
                 df_categ_all = pd.read_pickle('data/'+key+'.pickle')
@@ -609,10 +613,17 @@ class MPData:
                 version=row[category]['id']
                 resrow={'persistentId': toolpid, 'oldVersion':version}
                 
+               
+
                 statusitems=dataset[dataset['persistentId']==toolpid]
                 
                 stdf=statusitems[['status', 'property']]
-                #st=statusitems['status']
+                
+                
+                # if not toolpid in dataset.persistentId:
+                #     mrow, changed= self._removeFlag(row[category], 'curation-flag-url', properties)
+                #     print(f"CHANGED {changed}")
+                
                 status_property_value={}
                 vvalue=''
                 vproperty=''
@@ -624,15 +635,16 @@ class MPData:
                         vvalue=str(vrow['status'])
                         vproperty=str(vrow['property'])
                         wrongvals[str(vrow['property'])]=str(vrow['status'])
-                        print (f'{vrow["property"]}, {category} \n')
+                        #print (f'{vrow["property"]}, {category} \n')
                         #break       
                 myrow=row[category]
                 
                 for key in wrongvals:
                     vproperty=key
                     vvalue=wrongvals[key]
-                    if vvalue.strip()!='' and vvalue.strip!='200':
-                        print (f'The item with PID: {toolpid} has a {vvalue} HTTP status for the property {vproperty}, ({updateItem})')
+                    if (not (vvalue.strip() =='200')):
+                    #if (vvalue.strip()=='404' ):
+                        print (f'The item with PID: {category}/{toolpid} has a *{vvalue}* HTTP status for the property {vproperty}, ({updateItem})')
                         curation_property_exists=False
                         curation_detail_exists=False
                         curation_property_value={ "type": curationFlag, "value": "TRUE"}
@@ -653,7 +665,7 @@ class MPData:
                                 curation_detail_exists=True
                                 #if ind['value'].strip()==vproperty:
                                 if vproperty in ind['value'].strip():
-                                    print (f"flag property exists, value:  {ind['value']}")
+                                    print (f"flag property exists, value:  {ind['value']} \n")
                                     updateItem=updateItem or False
                                 else:
                                     ind['value']=self.createURLCurationProperty(cur_de_val, vproperty, vvalue)
@@ -670,10 +682,21 @@ class MPData:
                             #print (f" ------ property before { myrow['properties']} \n")
                             myrow['properties'].append(curation_detail_value)
                             updateItem=updateItem or True
+                    
                             #print (f"{updateItem}, {curation_detail_value}, pid: {toolpid}, \n { myrow['properties']}")
+                    if vvalue.strip()=='200' or vvalue == 200 :
+                        #print (f"check... \n")
+                        myrow, flagsdropped=self._removeFlag(row[category], 'curation-flag-url', properties)
+                        if (flagsdropped):
+                            print (f'The item with PID: {category}/{toolpid} has a *no longer valid flag* for the property {vproperty}, will be removed. ({updateItem})')
+                            updateItem=True
+                            #print (f" dopo {myrow['properties']} \n")
+                            
+                            
+                
                 if updateItem and self.debug:
                     #print(self.getPutEP(category))
-                    print ('\nRunning in debug mode, Marketplace dataset not updated.')
+                    print ('\n*** Running in DEBUG mode, Marketplace dataset not updated. ***\n')
            
                           
                 
@@ -692,7 +715,135 @@ class MPData:
             print ('...done!')
             return res
     
+    def removePropertyFlag(self, dataset, curationFlag, curationDetail):
+        """
+        
+        Cheks if items in dataset have the curationFlag, removes the flag and  updates the MP data.
+        
+        Parameters:
+        ----------
+        
+        dataset: DataFrame
+            The set of items to be checked for flag
+        curationFlag: String
+            The Curation Flag property
+        curationDetail: String
+            The Curation Detail property
+        
+        When all items have been checked the function synchronizes the local dataset with the MP data, it may take several minutes to complete.
+               
+        """
+        
+        if (not isinstance(dataset, pd.DataFrame)):
+            raise Exception(errno.ENOENT, os.strerror(errno.ENOENT), "dataset")
+        
+        
+        res=pd.DataFrame()
+        bearer=self.getBearer()
+        
+        put_headers = {'Content-type': 'application/json', 'Authorization':bearer}
+        
+        properties=dataset.property.unique().tolist();
+        for key in self.dataset_entrypoints:
+            if os.path.isfile('data/'+key+'.pickle') and not key=='actors':#local file is explicitly requested and one is available
+                df_categ_all = pd.read_pickle('data/'+key+'.pickle')
+            if df_categ_all.empty:
+                print('INFO:'+key+' data not downloaded...')
+                continue
+       
+            category=''
+            for index, row in df_categ_all.iterrows():
+                updateItem=False
+                category=df_categ_all.columns[-1]
+    
+                toolpid=row[category]['persistentId']
+                currentversion=row[category]['id']
+                statustool=dataset[dataset['persistentId']==toolpid]
+                if (not statustool.empty):
+                    vproperty=str(dataset['property'])
+                    myrow=row[category]
+                    myrow, flagsdropped=self._removeFlag(row[category], curationFlag, properties)
+                    if (flagsdropped):
+                        print (f'The item with PID: {category}/{toolpid} has a *no longer valid flag* for the property {vproperty}, will be removed. ({updateItem})')
+                        updateItem=True
+            
+        
+        return
+    
+    
     #local functions
+    def _removeFlag(self, row, curationFlag, cprops):
+        #print (cprops)
+        
+        cflagidx=-1
+        cdetidx=-1
+        dropflag=False
+        dropattrflag=False
+        keyname=''
+        if (curationFlag=='curation-flag-url'):
+            keyname='url'
+        else:
+            #checkingFlag=json.loads(curationFlag)
+            if (curationFlag['code']=="curation-flag-description"):
+                keyname='description'
+            
+       
+        for idx, ind in enumerate(row['properties']):
+            
+            if (ind['type']['code']== curationFlag): 
+                cflagidx=idx
+                
+            if (ind['type']['code']=='curation-detail'):
+                cur_de_val=ind['value']
+                detail_value=json.loads(cur_de_val.replace("'", '"'))
+                print (f"dv {detail_value}")
+                if keyname in detail_value:
+                    
+                    idxl=[]
+                    for purlidx, purl in enumerate(detail_value[keyname]):
+                        
+                        #print (f"PURL {purl}")
+                        if list(purl)[0] in cprops:
+                            cdetidx=idx
+                            if (len(detail_value['url'])==1):
+                                dropflag=True
+                               
+                            else:
+                                dropattrflag=True
+                                idxl.append(purlidx)
+                        # else:
+                        #     print (f"nah {list(purl)[0]}")
+        if (dropattrflag & (cdetidx>-1)):
+            idxl.sort(reverse=True)
+            de_val=row['properties'][cdetidx]['value']
+            flag_value=json.loads(de_val.replace("'", '"'))
+            for ix in idxl:
+                print(f"Dropping flag {flag_value['url'][ix]} ...")
+                flag_value['url'].pop(ix)
+                print ('done.')
+            if(len(flag_value)==0):
+                dropflag=True
+            else:
+                row['properties'][cdetidx]['value']=json.dumps(flag_value)
+                dropflag=False
+            
+            
+            #print(f"here {row['properties'][cdetidx]}")
+            
+        if (dropflag):
+            print (f"Dropping all {curationFlag} flags:\n {row['properties'][cdetidx]['value']}...")
+            if (cdetidx > cflagidx):
+                row['properties'].pop(cdetidx)
+                row['properties'].pop(cflagidx)
+            else:
+                row['properties'].pop(cflagidx)
+                row['properties'].pop(cdetidx)
+            print ('done.')
+            #print (row['properties'])
+       
+            
+             
+        return row, (dropattrflag | dropflag)
     
     def _getDate(self):
         now = datetime.now()
@@ -800,7 +951,7 @@ class MPData:
                             #print(f'+++++++++++++++++++++++++++ {cur_de_val}')
                             curation_detail_exists=True
                             if vproperty in cur_de_val.strip():
-                                print (f"flag property exists, value:  {ind['value']}")
+                                print (f"flag property exists, value:  {ind['value']} \n")
                                 updateItem=updateItem or False
                             else:
                                 ind['value']=self.updateURLCurationPropertyJson(cur_de_val, vproperty, vvalue)
@@ -821,7 +972,7 @@ class MPData:
                             #print (f"{updateItem}, {curation_detail_value}, pid: {toolpid}, \n { myrow['properties']}")
                 if updateItem and self.debug:
                     #print(self.getPutEP(category))
-                    print ('\nRunning in debug mode, Marketplace dataset not updated.')
+                    print ('\n *** Running in DEBUG mode, Marketplace dataset not updated. *** \n')
                    
                     
                 if (not self.debug) and updateItem and category.strip()!='':
