@@ -80,6 +80,7 @@ class Util(object):
         else:
             print ("Error: a dataframe is required!")
         if 'category' in dataset.columns:
+            #print (dataset.columns)
             dataset['tempurl'] = dataset['category'].apply(lambda y: y+'/')
         else:
             if 'externalIds' in dataset.columns:
@@ -700,27 +701,33 @@ class Util(object):
                     if nrelitems[0] not in self.acceptedops or len (nrelitems)>2:
                         print('wrong parameters ')
                         return
-                    if nrelitems[0].strip()=='=' and nrelitems[1]<1:
+                    if (nrelitems[0].strip()=='=' and nrelitems[1]<1) or (nrelitems[0].strip()=='<' and nrelitems[1]==1):
                         #print (items['relatedItems'])
+                        items['value']=items['relatedItems'].map(len)
                         no_related_items=items[items['relatedItems'].map(len)==0]
-                        no_related_items['value']=no_related_items['relatedItems'].map(len)
+                        
+                        
                         #return selected_items[['persistentId', 'category', 'label', 'relatedItems']]
                     if nrelitems[0].strip()=='=' and nrelitems[1]>0:
                         #print (nrelitems[1])
                         selected_items=items[items['relatedItems'].map(len)==nrelitems[1]]
                     if nrelitems[0].strip()=='>':
                         selected_items=items[items['relatedItems'].map(len)>nrelitems[1]]
-                    if nrelitems[0].strip()=='<':
+                    if nrelitems[0].strip()=='<' and nrelitems[1]>1:
                         selected_items=items[items['relatedItems'].map(len)<nrelitems[1]]
+                        zero_related_items=items[items['relatedItems'].map(len)==0]
                     
                 items= pd.json_normalize(data=temp[category], record_path='relatedItems', meta_prefix='item_', meta=['label', 'persistentId', 'category'])
                 #print (category)
                 if no_related_items.empty:
                     selected_items['value']=selected_items['relatedItems'].map(len)
-                    #print (selected_items['value'])
+                    
                     searched_items=pd.merge(left=selected_items, right=items, left_on='persistentId', right_on='item_persistentId')
+                    
                     if not searched_items.empty:
                         dfs.append(searched_items)
+                    
+                
                 else:
                     dfs.append (no_related_items)
                     returned_fields=no_rel_items_fields
