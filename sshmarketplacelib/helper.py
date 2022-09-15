@@ -664,6 +664,7 @@ class Util(object):
         wid=['workflowId']
         no_rel_items_fields=['MPUrl','persistentId', 'category', 'label', 'relatedItems', 'value']
         dfs=[]
+
         no_related_items=pd.DataFrame()
         if itemcategories.strip()=='all':
                 categories=self.allCategories
@@ -715,8 +716,7 @@ class Util(object):
                         selected_items=items[items['relatedItems'].map(len)>nrelitems[1]]
                     if nrelitems[0].strip()=='<' and nrelitems[1]>1:
                         selected_items=items[items['relatedItems'].map(len)<nrelitems[1]]
-                        zero_related_items=items[items['relatedItems'].map(len)==0]
-                    
+                        
                 items= pd.json_normalize(data=temp[category], record_path='relatedItems', meta_prefix='item_', meta=['label', 'persistentId', 'category'])
                 #print (category)
                 if no_related_items.empty:
@@ -726,8 +726,8 @@ class Util(object):
                     
                     if not searched_items.empty:
                         dfs.append(searched_items)
-                    
-                
+
+
                 else:
                     dfs.append (no_related_items)
                     returned_fields=no_rel_items_fields
@@ -741,14 +741,17 @@ class Util(object):
         if df_items.empty:
             print ('getRelatedItems(itemcategories, *nrelitems): no values found')
             return pd.DataFrame(columns=returned_fields)
+        
+            
         df_items=self._getMPUrl(df_items)
         #df_items['MPUrl'] = df_items['MPUrl'].apply(lambda y: y if len(y)>0 else y)
-        
+       
+            
         if wid[0] in df_items.columns:
             returned_fields=returned_fields+wid    
     
         df_items=df_items[returned_fields].sort_values('label')
-        
+       
         df_items.reset_index(inplace=True)
         return df_items[returned_fields]
     
