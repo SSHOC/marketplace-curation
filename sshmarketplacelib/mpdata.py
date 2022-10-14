@@ -12,9 +12,11 @@ import os
 import json
 import numpy as np
 import yaml
+import urllib.request
 import errno
 from datetime import datetime
 from warnings import warn
+
 
 #from bokeh.util.sampledata import DataFrame
 from http.cookies import _getdate
@@ -177,6 +179,59 @@ class MPData:
         return df_items
     
     
+    def getMPKeywordProperties(self, mykw):# -> DataFrame:
+        
+        """
+        Returns keyword properties
+        
+        """
+        
+        myurl=self.dataset_entrypoints["keyword"]+mykw
+        with urllib.request.urlopen(myurl) as url:
+            mdata = json.load(url)
+ 
+        df_kw= pd.DataFrame(mdata["concepts"])
+        return df_kw
+    
+    
+    
+    def getMPConcepts(self):# -> DataFrame:
+        
+        """
+        Returns MP Concepts
+        
+        """
+        df_concepts = pd.DataFrame()
+        items= pd.DataFrame()
+        myurl=self.dataset_entrypoints["concepts"]
+        # with urllib.request.urlopen(myurl) as url:
+        #     mdata = json.load(url)
+        #
+        # df_kw= pd.DataFrame(mdata["concepts"])
+        
+        
+        with urllib.request.urlopen(myurl+'?perpage=100') as url:
+            df_desc_par = json.load(url)
+        
+        
+        df_concepts= pd.DataFrame(df_desc_par["concepts"])
+        #df_desc_par=pd.read_json(myurl+'?perpage=100', orient='columns')
+        start=1
+        
+        if not df_concepts.empty:
+            pages=df_desc_par['pages']
+            start+=1
+            mdx = pd.Series(range(start, pages+1))
+            for var in mdx:
+                turl = myurl+"?page="+str(var)
+                #print (f'{var} - {turl}')
+                try:
+                    with urllib.request.urlopen(turl+'&perpage=100') as murl:
+                        df_desc_par = json.load(murl)
+                        df_concepts=df_concepts.append(pd.DataFrame(df_desc_par["concepts"]), ignore_index=True)
+                except:
+                    print(f'SEVERE: Error getting concepts, items may be not completely loaded. (Error loading {turl})')
+        return df_concepts
     
     """
         Methods to update the MP dataset
