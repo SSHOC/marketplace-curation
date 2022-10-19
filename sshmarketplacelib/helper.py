@@ -614,7 +614,7 @@ class Util(object):
                     #print (' here '+pr)
                     tmp=myd[['ts_persistentId', 'type.code']]
                     #tmp.rename(columns = {'type.code': pr}, inplace=True)
-                    df_items=pd.merge(left=df_items, right=tmp, left_on='persistentId', right_on='ts_persistentId', how = 'outer').fillna(np.nan)
+                    df_items=pd.merge(left=df_items, right=tmp, left_on='persistentId', right_on='ts_persistentId', how = 'outer', suffixes=('', '_y')).fillna(np.nan)
                     df_items.rename(columns = {'type.code': pr}, inplace=True)
                 else:
                     
