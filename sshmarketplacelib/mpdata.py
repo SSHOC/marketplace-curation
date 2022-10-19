@@ -931,6 +931,7 @@ class MPData:
     
         
     #/local functions
+    
     def setPropertyFlags(self, dataset, curationFlag, curationDetail):
         
         """
@@ -1037,6 +1038,85 @@ class MPData:
                     put_result=requests.put(self.getPutEP(category)+toolpid, data=obj, headers=put_headers)
                     print (put_result)
                     entryline={'date': _getdate(), 'persistentId': toolpid, 'category':category,'restore_version':currentversion, 'operation':curationFlag['code']}
+                    restoreset=self._addLogentry(restoreset, entryline)
+                
+        if not restoreset.empty:
+            self._updateLog(restoreset)
+            
+        if not self.debug:
+            print ('Reloading data from MP server, please wait...')
+            self._getAllMPItems()
+            print ('done!')        
+            return res
+    
+    
+    
+    def updateItems(self, dataset, updateList, filterList):
+        
+        """
+        Updates items in dataset by changing the content of the attributes contained in the updateList, the updated items are 
+        stored in in the MP.
+        
+        Parameters:
+        -----------
+        
+        dataset: DataFrame
+            The set of items to be updated
+        updateList: List
+            The list of properties/attributes and values 
+        filterList: List
+            The list of filters
+        When all items in the dataset have been updated the function synchronizes the local dataset with the MP data, 
+        it may take several minutes to complete.
+               
+        """
+        res=pd.DataFrame()
+        restoreset=self._getLog()
+        bearer=self.getBearer()
+        put_headers = {'Content-type': 'application/json', 'Authorization':bearer}
+        
+        
+        for key in self.dataset_entrypoints:
+            if os.path.isfile('data/'+key+'.pickle') and not key=='actors':#local file is explicitly requested and one is available
+                df_categ_all = pd.read_pickle('data/'+key+'.pickle')
+            if df_categ_all.empty:
+                print('INFO:'+key+' local data not present, please download MP dataset...')
+                continue
+       
+            category=''
+            for index, row in df_categ_all.iterrows():
+                updateItem=False
+                category=df_categ_all.columns[-1]
+    
+                toolpid=row[category]['persistentId']
+                currentversion=row[category]['id']
+                statustool=dataset[dataset['persistentId']==toolpid]
+                oldkval=''
+              
+                for stindex, strow in statustool.iterrows():
+                    for key in updateList:
+                        oldkval=strow[key+".code"]
+                       
+                        myrow=row[category]
+                        for ind in myrow['properties']:
+                            if (ind[key]["code"]==oldkval and ind['concept']['code']=='linguistics'):
+                                print (f"type: {ind['type']},\nconcept: {ind['concept']}\n")#['code']}, {ind['type']['concept']}")
+                                print (f'Changing the property:  "{key}", from  "code: {oldkval}" to "code: {updateList[key]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
+ 
+                                
+
+                if updateItem and self.debug:
+                    #print(self.getPutEP(category))
+                    print ('\n *** Running in DEBUG mode, Marketplace dataset not updated. *** \n')
+                   
+                    
+                if (not self.debug) and updateItem and category.strip()!='':
+                    print (f"updating item... ")
+                    obj = json.dumps(myrow)
+            
+                    put_result=requests.put(self.getPutEP(category)+toolpid, data=obj, headers=put_headers)
+                    print (put_result)
+                    entryline={"date": _getdate(), "persistentId": toolpid, "category":category,"restore_version":currentversion, "operation":"update"}
                     restoreset=self._addLogentry(restoreset, entryline)
                 
         if not restoreset.empty:
