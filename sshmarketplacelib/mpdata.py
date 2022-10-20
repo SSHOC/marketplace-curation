@@ -1050,6 +1050,12 @@ class MPData:
             return res
     
     
+    # {'type': {'code': 'discipline'},
+    #  'concept': {'code': '6020',
+    #              'vocabulary': {'code': 'discipline'},
+    #              'uri': 'https://vocabs.acdh.oeaw.ac.at/oefosdisciplines/6020'}
+    #  }
+    
     
     def updateItems(self, dataset, updateList, filterList):
         
@@ -1098,26 +1104,33 @@ class MPData:
                         oldkval=strow[key+".code"]
                        
                         myrow=row[category]
+                        
                         for ind in myrow['properties']:
-                            if (ind[key]["code"]==oldkval and ind['concept']['code']=='linguistics'):
-                                print (f"type: {ind['type']},\nconcept: {ind['concept']}\n")#['code']}, {ind['type']['concept']}")
-                                print (f'Changing the property:  "{key}", from  "code: {oldkval}" to "code: {updateList[key]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
- 
-                                
+                            # print (ind)
+                            if (('concept' in ind)  and ind[key]["code"]==oldkval and ind['concept']['code']==filterList["concept"]):
 
-                if updateItem and self.debug:
-                    #print(self.getPutEP(category))
-                    print ('\n *** Running in DEBUG mode, Marketplace dataset not updated. *** \n')
+                                print (f'Changing the property:  "{key}", from  "{key}": {ind["type"]} \nto\n "{key}": {updateList[key]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
+                                
+                                print (f'Changing the property:  "concept", from  "concept": {ind["concept"]} \nto\n "concept": {updateList["concept"]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
+
+                                ind[key]=updateList[key]
+                                ind["concept"]=updateList["concept"]
+                                updateItem=True
+                                # print("Ecco:")
+                                # print (ind)
+                    if updateItem and self.debug:
+                        print (json.dumps(myrow))
+                        print ('\n *** Running in DEBUG mode, Marketplace dataset not updated. *** \n')
                    
                     
-                if (not self.debug) and updateItem and category.strip()!='':
-                    print (f"updating item... ")
-                    obj = json.dumps(myrow)
+                    if (not self.debug) and updateItem and category.strip()!='':
+                        print (f"updating item... ")
+                        obj = json.dumps(myrow)
             
-                    put_result=requests.put(self.getPutEP(category)+toolpid, data=obj, headers=put_headers)
-                    print (put_result)
-                    entryline={"date": _getdate(), "persistentId": toolpid, "category":category,"restore_version":currentversion, "operation":"update"}
-                    restoreset=self._addLogentry(restoreset, entryline)
+                        put_result=requests.put(self.getPutEP(category)+toolpid, data=obj, headers=put_headers)
+                        print (put_result)
+                        entryline={"date": _getdate(), "persistentId": toolpid, "category":category,"restore_version":currentversion, "operation":"update"}
+                        restoreset=self._addLogentry(restoreset, entryline)
                 
         if not restoreset.empty:
             self._updateLog(restoreset)
@@ -1188,7 +1201,7 @@ class MPData:
             if (ind['type']['code']=='curation-flag-merged'):
                 print(ind['type']['code'])
                 updateItem=False
-                print('Error, please check the merged item')
+                print('Error, please check the items... maybe already merged?')
                 return ''
         item['properties'].append(curation__merge_value)
         posturl=self.getPutEP(item['category'])+'merge?with='+pids.replace(' ','')
