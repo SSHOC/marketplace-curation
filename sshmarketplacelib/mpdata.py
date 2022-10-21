@@ -1057,7 +1057,7 @@ class MPData:
     #  }
     
     
-    def updateItems(self, dataset, updateList, filterList):
+    def updateItemsProperties(self, dataset, updateList, filterList):
         
         """
         Updates items in dataset by changing the content of the attributes contained in the updateList, the updated items are 
@@ -1106,7 +1106,6 @@ class MPData:
                         myrow=row[category]
                         
                         for ind in myrow['properties']:
-                            # print (ind)
                             if (('concept' in ind)  and ind[key]["code"]==oldkval and ind['concept']['code']==filterList["concept"]):
 
                                 print (f'Changing the property:  "{key}", from  "{key}": {ind["type"]} \nto\n "{key}": {updateList[key]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
@@ -1116,11 +1115,10 @@ class MPData:
                                 ind[key]=updateList[key]
                                 ind["concept"]=updateList["concept"]
                                 updateItem=True
-                                # print("Ecco:")
-                                # print (ind)
                     if updateItem and self.debug:
-                        print (json.dumps(myrow))
+                        #print(json.dumps(myrow))
                         print ('\n *** Running in DEBUG mode, Marketplace dataset not updated. *** \n')
+                        return res
                    
                     
                     if (not self.debug) and updateItem and category.strip()!='':
@@ -1137,7 +1135,7 @@ class MPData:
             
         if not self.debug:
             print ('Reloading data from MP server, please wait...')
-            self._getAllMPItems()
+            #self._getAllMPItems()
             print ('done!')        
             return res
     
