@@ -1060,7 +1060,7 @@ class MPData:
     #  }
     
     
-    def updateItemsProperties(self, dataset, updateList, filterList):
+    def updateItemsProperties(self, dataset, updateList={}, filterList={}):
         
         """
         Updates items in dataset by changing the content of the attributes contained in the updateList, the updated items are 
@@ -1093,7 +1093,9 @@ class MPData:
                 continue
        
             category=''
+            cnt=0;
             for index, row in df_categ_all.iterrows():
+                cnt+=1
                 updateItem=False
                 category=df_categ_all.columns[-1]
     
@@ -1103,8 +1105,10 @@ class MPData:
                 oldkval=''
               
                 for stindex, strow in statustool.iterrows():
+                    
                     filterList=strow['filterList']
                     updateList=strow['updateList']
+                    
                     updateItem=False
                     for mykey in updateList:
                         oldkval=strow[mykey+".code"]
@@ -1136,7 +1140,8 @@ class MPData:
                         print (put_result)
                         entryline={"date": _getdate(), "persistentId": toolpid, "category":category,"restore_version":currentversion, "operation":"updateItemsProperties"}
                         restoreset=self._addLogentry(restoreset, entryline)
-                        self._updateLog(restoreset)
+                        if (cnt%10==0):
+                            self._updateLog(restoreset)
                 
         if not restoreset.empty:
             self._updateLog(restoreset)
