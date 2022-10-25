@@ -13,6 +13,7 @@ import json
 import numpy as np
 import yaml
 import urllib.request
+import urllib
 import errno
 from datetime import datetime
 from warnings import warn
@@ -186,7 +187,7 @@ class MPData:
         
         """
         
-        myurl=self.dataset_entrypoints["keyword"]+mykw
+        myurl=self.dataset_entrypoints["keyword"]+urllib.parse.quote_plus(mykw)
         with urllib.request.urlopen(myurl) as url:
             mdata = json.load(url)
  
@@ -916,8 +917,10 @@ class MPData:
             df_log=pd.DataFrame()
             return df_log
     def _updateLog(self, df_log):
+        if os.path.isfile(self.datadir+'log1.pickle'):
+            os.remove(self.datadir+'log1.pickle')
         if os.path.isfile(self.datadir+'log.pickle'):
-            os.remove(self.datadir+'log.pickle')
+            os.rename(self.datadir+'log.pickle', self.datadir+'log1.pickle')
         df_log.to_pickle(self.datadir+'log.pickle')
         
     def _addLogentry(self, df_log, log_entry):
@@ -1100,25 +1103,29 @@ class MPData:
                 oldkval=''
               
                 for stindex, strow in statustool.iterrows():
-                    for key in updateList:
-                        oldkval=strow[key+".code"]
-                       
+                    filterList=strow['filterList']
+                    updateList=strow['updateList']
+                    updateItem=False
+                    for mykey in updateList:
+                        oldkval=strow[mykey+".code"]
+                        #print(oldkval+' '+mykey)
                         myrow=row[category]
                         
                         for ind in myrow['properties']:
-                            if (('concept' in ind)  and ind[key]["code"]==oldkval and ind['concept']['code']==filterList["concept"]):
+                            
+                            
+                            if (('concept' in ind) and ("label" in ind["concept"]) and ind[mykey]["code"]==oldkval and (ind["concept"]["label"]).lower()==filterList["concept"]): #was ind['concept']['code']==filterList["concept"]
 
-                                print (f'Changing the property:  "{key}", from  "{key}": {ind["type"]} \nto\n "{key}": {updateList[key]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
+                                print (f'Changing the property:  "{mykey}", from  "{mykey}": {ind["type"]} \nto\n "{mykey}": {updateList[mykey]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
                                 
                                 print (f'Changing the property:  "concept", from  "concept": {ind["concept"]} \nto\n "concept": {updateList["concept"]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
 
-                                ind[key]=updateList[key]
+                                ind[mykey]=updateList[mykey]
                                 ind["concept"]=updateList["concept"]
                                 updateItem=True
                     if updateItem and self.debug:
                         #print(json.dumps(myrow))
                         print ('\n *** Running in DEBUG mode, Marketplace dataset not updated. *** \n')
-                        return res
                    
                     
                     if (not self.debug) and updateItem and category.strip()!='':
@@ -1127,15 +1134,16 @@ class MPData:
             
                         put_result=requests.put(self.getPutEP(category)+toolpid, data=obj, headers=put_headers)
                         print (put_result)
-                        entryline={"date": _getdate(), "persistentId": toolpid, "category":category,"restore_version":currentversion, "operation":"update"}
+                        entryline={"date": _getdate(), "persistentId": toolpid, "category":category,"restore_version":currentversion, "operation":"updateItemsProperties"}
                         restoreset=self._addLogentry(restoreset, entryline)
+                        self._updateLog(restoreset)
                 
         if not restoreset.empty:
             self._updateLog(restoreset)
             
         if not self.debug:
-            print ('Reloading data from MP server, please wait...')
-            #self._getAllMPItems()
+            print ('Reloading data from MP server, it may take many minutes to complete, please wait...')
+            self._getAllMPItems()
             print ('done!')        
             return res
     
@@ -1298,7 +1306,11 @@ class MPData:
     
     #RESTORE ITEMS
     
-    
+    # # Iterating over multiple columns - same data type
+    # result = [f(row[0], ..., row[n]) for row in df[['col1', ...,'coln']].to_numpy()]
+    # # Iterating over multiple columns - differing data type
+    # result = [f(row[0], ..., row[n]) for row in zip(df['col1'], ..., df['coln'])]
+
     def restoreItems(self, items):
        
         bearer=self.getBearer()
