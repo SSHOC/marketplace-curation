@@ -1123,7 +1123,14 @@ class MPData:
                                 print (f'Changing the property:  "{mykey}", from  "{mykey}": {ind["type"]} \nto\n "{mykey}": {updateList[mykey]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
                                 
                                 print (f'Changing the property:  "concept", from  "concept": {ind["concept"]} \nto\n "concept": {updateList["concept"]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
-
+                                #Check if the property already exists
+                                #for insideind in myrow['properties']:
+                                    # if (("concept" in insideind) and ("label" in insideind["concept"]) 
+                                    #     and insideind[mykey]["code"]==updateList[mykey]["code"]
+                                    #     and insideind["concept"]["code"]==updateList["concept"]["code"]):
+                                    #
+                                    #     print(f'ECCO {insideind["concept"]}')
+                                    
                                 ind[mykey]=updateList[mykey]
                                 ind["concept"]=updateList["concept"]
                                 updateItem=True
