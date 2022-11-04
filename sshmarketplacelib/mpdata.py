@@ -1103,6 +1103,7 @@ class MPData:
                 currentversion=row[category]['id']
                 statustool=dataset[dataset['persistentId']==toolpid]
                 oldkval=''
+                
               
                 for stindex, strow in statustool.iterrows():
                     
@@ -1120,9 +1121,10 @@ class MPData:
                             
                             if (('concept' in ind) and ("label" in ind["concept"]) and ind[mykey]["code"]==oldkval and (ind["concept"]["label"]).lower()==filterList["concept"]): #was ind['concept']['code']==filterList["concept"]
 
-                                print (f'Changing the property:  "{mykey}", from  "{mykey}": {ind["type"]} \nto\n "{mykey}": {updateList[mykey]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
-                                
-                                print (f'Changing the property:  "concept", from  "concept": {ind["concept"]} \nto\n "concept": {updateList["concept"]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
+                                #print (f'Changing the property:  "{mykey}", from  "{mykey}": {ind["type"]} \nto\n "{mykey}": {updateList[mykey]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
+                                print (f'Changing the value of property:  "{mykey}" to {updateList[mykey]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
+                              
+                                print (f'Changing the property:  "concept", to "concept": {updateList["concept"]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
                                 #Check if the property already exists
                                 #for insideind in myrow['properties']:
                                     # if (("concept" in insideind) and ("label" in insideind["concept"]) 
