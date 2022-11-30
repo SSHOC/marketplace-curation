@@ -78,7 +78,7 @@ class URLCheck(object):
             r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})' # ...or ip
             r'(?::\d+)?' # optional port
             r'(?:/?|[/?]\S+)$', re.IGNORECASE)
-        
+        #print(f'URL: {var}')
         if ( var != "" and var!=None and re.match(regex, var)):
             try:
                 #print(var)
@@ -97,7 +97,7 @@ class URLCheck(object):
                 #   print(var)
                 df_tool_work_aa_http_status.append({'url': var, 'status': int(500)})
             except TypeError:
-                #    print(var)
+                print('TypeError')
                 df_tool_work_aa_http_status.append({'url': var, 'status': int(400)})
         else:
             # print(var ,0)
@@ -182,7 +182,9 @@ class URLCheck(object):
             with Pool(cores) as p:
                 listofresults=p.map(self.getHTTP_Status, df_urls)
         for el in listofresults:
-            df_tool_work_aa_http_status=df_tool_work_aa_http_status.append(el[0], ignore_index=True)
+            #print (el[0])
+            if (len(el)>0 and el[0]):
+                df_tool_work_aa_http_status=df_tool_work_aa_http_status.append(el[0], ignore_index=True)
  
         
         df_http_status_sub=df_tool_work_aa_http_status[df_tool_work_aa_http_status['status'] != 1]
