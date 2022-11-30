@@ -185,8 +185,9 @@ class URLCheck(object):
             #print (el[0])
             if (len(el)>0 and el[0]):
                 df_tool_work_aa_http_status=df_tool_work_aa_http_status.append(el[0], ignore_index=True)
- 
-        
+            else:
+                print (f'error {el}')
+    
         df_http_status_sub=df_tool_work_aa_http_status[df_tool_work_aa_http_status['status'] != 1]
         #df_http_status_err=df_http_status_sub[df_http_status_sub['status'] != 200]
         df_list_of_url_status=pd.merge(left=df_url_work_all, right=df_http_status_sub, left_on=pivotField, right_on='url')
