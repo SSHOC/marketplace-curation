@@ -79,9 +79,8 @@ class URLCheck(object):
             r'(?::\d+)?' # optional port
             r'(?:/?|[/?]\S+)$', re.IGNORECASE)
         
-        if ( var != "" and var!=None and re.match(regex, var)):
+        if ( (var is not None) and var != "" and re.match(regex, var)):
             try:
-                #print(var)
                 r =requests.get(var,timeout=3)
                 df_tool_work_aa_http_status.append({'url': var, 'status': int(r.status_code)})
             except requests.exceptions.ConnectionError:
@@ -182,7 +181,8 @@ class URLCheck(object):
             with Pool(cores) as p:
                 listofresults=p.map(self.getHTTP_Status, df_urls)
         for el in listofresults:
-            df_tool_work_aa_http_status=df_tool_work_aa_http_status.append(el[0], ignore_index=True)
+            if el:
+                df_tool_work_aa_http_status=df_tool_work_aa_http_status.append(el[0], ignore_index=True)
  
         
         df_http_status_sub=df_tool_work_aa_http_status[df_tool_work_aa_http_status['status'] != 1]
