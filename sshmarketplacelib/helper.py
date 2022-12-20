@@ -371,7 +371,7 @@ class Util(object):
         else:
             df_tool_work_duplicates=dataset[dataset.astype(str).duplicated(subset= None, keep=False)]
             
-        return df_tool_work_duplicates
+        return df_tool_work_duplicates.drop_duplicates(subset = ['id'], keep = False).reset_index(drop = True)
     
     
     def getDuplicatedActorsWithItems(self, dataset, props=''):
