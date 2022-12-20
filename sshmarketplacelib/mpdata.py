@@ -1244,7 +1244,6 @@ class MPData:
         return ''
     
     #(POST /api/actors/{id}/merge?with={id1},{id2}) 
-    #{"code":"curation-flag-merged","label":"Curate merged items","type":"boolean","groupName":"Curation","hidden":true,"ord":39,"allowedVocabularies":[]}
     def postMergedActors(self, actorid, mergingids):
         if actorid.strip()=='':
             print('No ID provided for Actor')

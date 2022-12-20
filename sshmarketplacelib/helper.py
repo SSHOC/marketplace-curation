@@ -406,8 +406,8 @@ class Util(object):
                     return
         extcontr_df=self.getContributors()
         test_tmp=pd.merge(left=dataset, right=extcontr_df[['persistentId', 'label', 'category','actor.id','role.label']], left_on='id', right_on='actor.id')
-        testdup=test_tmp[test_tmp.duplicated(subset=props, keep=False)]
-        testdup=testdup[['MPUrl', 'id', 'name', 'externalIds','affiliations','website','email','role.label','persistentId','label','category']]
+        testdup=test_tmp[test_tmp.duplicated(subset=properties, keep=False)]
+        testdup=testdup[['MPUrl', 'id', 'name', 'externalIds','affiliations','website','role.label','persistentId','label','category']]
         df_tmp=testdup.groupby('name')['id'].apply(set).reset_index(name='Id')
         df_tmp['isDuplicated']=df_tmp['Id'].apply(lambda y: 'yes' if len(y)>1 else 'no')
         df_tmpduplicated=df_tmp[df_tmp.isDuplicated=='yes']
