@@ -666,8 +666,8 @@ class MPData:
                
             
                 toolpid=row[category]['persistentId']
-                version=row[category]['id']
-                resrow={'persistentId': toolpid, 'oldVersion':version}
+                #version=row[category]['id']
+                #resrow={'persistentId': toolpid, 'oldVersion':version}
                 
                
 
@@ -680,10 +680,10 @@ class MPData:
                 #     mrow, changed= self._removeFlag(row[category], 'curation-flag-url', properties)
                 #     print(f"CHANGED {changed}")
                 
-                status_property_value={}
+                #status_property_value={}
                 vvalue=''
                 vproperty=''
-                value='' 
+                #value='' 
                 wrongvals={}             
                 for vindex, vrow in stdf.iterrows():
                     
@@ -719,7 +719,7 @@ class MPData:
                             if (ind['type']['code']=='curation-detail'):
                                 cur_de_val=ind['value']
                                 curation_detail_exists=True
-                                #if ind['value'].strip()==vproperty:
+
                                 if vproperty in ind['value'].strip():
                                     print (f"flag property exists, value:  {ind['value']} \n")
                                     updateItem=updateItem or False
@@ -729,7 +729,6 @@ class MPData:
                                     updateItem=updateItem or True
                         #add HTTP-status-code property 
                         if not curation_property_exists:
-                            #print ('appending curation_property_value')
                             myrow['properties'].append(curation_property_value)
                             updateItem=updateItem or True
                         if not curation_detail_exists:
