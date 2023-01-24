@@ -129,7 +129,8 @@ class MPData:
         #print (url)
         df_desc_par=pd.read_json(url+'?perpage=20', orient='columns')
         
-        df_desc=df_desc.append(df_desc_par, ignore_index=True)
+        #df_desc=df_desc.append(df_desc_par, ignore_index=True)
+        df_desc=pd.concat([df_desc, df_desc_par])
         if not df_desc.empty:
             if pages==0:
                 pages=df_desc.loc[0].pages
@@ -142,8 +143,9 @@ class MPData:
                     df_desc_par=pd.read_json(turl, orient='columns')
                 except:
                     print(f'SEVERE: Error getting {itemscategory}, items may be not completely loaded. (Error loading {turl})')
-                    
-                df_desc=df_desc.append(df_desc_par, ignore_index=True)
+                
+                #df_desc=df_desc.append(df_desc_par, ignore_index=True)
+                df_desc=pd.concat([df_desc, df_desc_par])
             category=df_desc.columns[-1]
             items= pd.json_normalize(df_desc[category])
 
@@ -229,7 +231,8 @@ class MPData:
                 try:
                     with urllib.request.urlopen(turl+'&perpage=100') as murl:
                         df_desc_par = json.load(murl)
-                        df_concepts=df_concepts.append(pd.DataFrame(df_desc_par["concepts"]), ignore_index=True)
+                        #df_concepts=df_concepts.append(pd.DataFrame(df_desc_par["concepts"]), ignore_index=True)
+                        df_concepts=pd.concat([df_concepts, pd.DataFrame(df_desc_par["concepts"])])
                 except:
                     print(f'SEVERE: Error getting concepts, items may be not completely loaded. (Error loading {turl})')
         return df_concepts

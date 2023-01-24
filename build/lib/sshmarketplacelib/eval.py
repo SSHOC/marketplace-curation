@@ -182,8 +182,8 @@ class URLCheck(object):
                 listofresults=p.map(self.getHTTP_Status, df_urls)
         for el in listofresults:
             if el:
-                df_tool_work_aa_http_status = pd.concat([df_tool_work_aa_http_status, pd.DataFrame.from_records([el[0]])])
-              
+                df_tool_work_aa_http_status=df_tool_work_aa_http_status.append(el[0], ignore_index=True)
+ 
         
         df_http_status_sub=df_tool_work_aa_http_status[df_tool_work_aa_http_status['status'] != 1]
         #df_http_status_err=df_http_status_sub[df_http_status_sub['status'] != 200]
@@ -273,10 +273,9 @@ class URLCheck(object):
             with Pool(cores) as p:
                 listofresults=p.map(self.getHTTP_Status, df_urls)
         for el in listofresults:
+            #print (el)
             if el:
-                #df_tool_work_aa_http_status=df_tool_work_aa_http_status.append(el[0], ignore_index=True)
-                df_tool_work_aa_http_status = pd.concat([df_tool_work_aa_http_status, pd.DataFrame.from_records([el[0]])])
-
+                df_tool_work_aa_http_status=df_tool_work_aa_http_status.append(el[0], ignore_index=True)
         #end
         #return df_tool_work_aa_http_status
             

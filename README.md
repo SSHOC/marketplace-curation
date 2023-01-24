@@ -71,9 +71,6 @@ Returns:
 
 </TABLE> 
   
-The notebook *LibTest.ipynb* shows how to use the Library in a notebook. 
-
-*The complete documentation is being created... [TBD]*
 
 ## Installation
 It is recommended to install library in a virtual environment to avoid dependency clash. 
