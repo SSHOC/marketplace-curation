@@ -2,7 +2,7 @@
 
 This repository contains a Python library to download and process the [SSH Open Marketplace](https://marketplace.sshopencloud.eu/) dataset, and a set of notebooks providing examples and use cases to use this library. 
 
-The libary has been designed to be used by the SSH Open Marketplace Editorial Team and provides a set of ad hoc functions that can be used in Python Notebooks or programs. The various notebooks included in this repository allow any user to gain an overview of the SSH Open Marketplace (notebook 2) and authenticated users to write back to the SSH Open Marketplace specific curation information. See the [SSH Open Marketplace user documentation](https://marketplace.sshopencloud.eu/contribute/moderator-guidelines) for more details.
+The SSH Open Marketplace Data Library has been designed to be used by the SSH Open Marketplace Editorial Team and provides a set of ad hoc functions that can be used in Python Notebooks or programs. The various notebooks included in this repository allow any user to gain an overview of the SSH Open Marketplace (notebook 2) and authenticated users to write back to the SSH Open Marketplace specific curation information. See the [SSH Open Marketplace user documentation](https://marketplace.sshopencloud.eu/contribute/moderator-guidelines) for more details.
  
 ## Usage
 
