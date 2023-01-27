@@ -137,7 +137,7 @@ class MPData:
             start+=1
             mdx = pd.Series(range(start, pages+1))
             for var in mdx:
-                turl = url+"?page="+str(var)+"&perpage=20"
+                turl = url+"?page="+str(var)+"&perpage=100"
                 #print (f'{var} - {turl}')
                 try:
                     df_desc_par=pd.read_json(turl, orient='columns')
@@ -932,6 +932,7 @@ class MPData:
             return df_log
         else:
             df_log=df_log.append([log_entry])
+            #df_log=pd.concat([df_log, log_entry])
             return df_log
     
         
@@ -1275,6 +1276,9 @@ class MPData:
             print('Merged Item:')
             print (mitem)
             print ('...done.')
+            restoreset=self._getLog()
+            entryline={"date": _getdate(), "persistentId": actorid, "category":'actors',"merged_item":mitem, "operation":"mergeactors"}
+            restoreset=self._addLogentry(restoreset, entryline)
             return mitem
         if self.debug:
             print('...not executed, running in DEBUG mode.')
@@ -1288,11 +1292,14 @@ class MPData:
             return pd.DataFrame()
         turl=self.getPutEP('actors')+actorid+'?items=true'
         #turl='https://sshoc-marketplace-api-stage.acdh-dev.oeaw.ac.at/api/actors/2266?items=true' 
-        print (f'Getting items for Actor id: {actorid} ...')
+        #print (f'Getting items for Actor id: {actorid} ...')
         df_desc_par=requests.get(turl)
+        if (df_desc_par.status_code!=200):
+            print (f'Problem occurs, result status code for actor {actorid} is {df_desc_par.status_code}, returning empty result')
+            return pd.DataFrame(); #CHECK THIS: needs to be changed
         my=json.loads(df_desc_par.text)
         mydf=pd.DataFrame(my['items'])
-        print ('...done.')
+        #print ('...done.')
         return mydf
         
     def _getAllMPItems(self):

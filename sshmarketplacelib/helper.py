@@ -321,7 +321,7 @@ class Util(object):
         df_items_values = df_items[propertyname].value_counts()
         return df_items_values
     
-    
+    #TO BE REMOVED, DO NOT USE IT!
     def getDuplicates(self, dataset, props=''):
         
         """
@@ -642,18 +642,21 @@ class Util(object):
     
     def lists_to_list(self, nested_lists):
         outer_list = []
-        for el in nested_lists: 
+        #print (f'input {nested_lists}')
+        for el in nested_lists:
+           
             if type(el) == list: 
-                self.lists_to_list(el) 
+                self.lists_to_list(el)
             else:
-                #print (f'***** {el}')
+                
                 if type(el) == dict:
-                    #print(json.dumps(el, sort_keys=True))
+                    
                     jsel=json.dumps(el, sort_keys=True)
                     outer_list.append(jsel)
                 else:
+                    
                     outer_list.append(el)
-        #print (len(set(outer_list)))
+        #print (f' output {set(outer_list)}')
         return set(outer_list)
     
     
