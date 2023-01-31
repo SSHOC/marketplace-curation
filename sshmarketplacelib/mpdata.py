@@ -188,12 +188,15 @@ class MPData:
         Returns keyword properties
         
         """
+       
+        params={'types':'keyword', 'q':urllib.parse.quote_plus(mykw)}
+        myurl=self.dataset_entrypoints["concepts"]+'?'+urllib.parse.urlencode(params, doseq=True)
         
-        myurl=self.dataset_entrypoints["keyword"]+urllib.parse.quote_plus(mykw)
         with urllib.request.urlopen(myurl) as url:
             mdata = json.load(url)
- 
+        
         df_kw= pd.DataFrame(mdata["concepts"])
+        
         return df_kw
     
     
@@ -1082,6 +1085,9 @@ class MPData:
         it may take several minutes to complete.
                
         """
+        if (dataset.empty):
+            print('Empty data frame provided! No actions.')
+            return pd.DataFrame()
         res=pd.DataFrame()
         restoreset=self._getLog()
         bearer=self.getBearer()
