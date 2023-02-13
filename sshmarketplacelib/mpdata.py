@@ -190,13 +190,29 @@ class MPData:
         """
        
         params={'types':'keyword', 'q':urllib.parse.quote_plus(mykw)}
-        myurl=self.dataset_entrypoints["concepts"]+'?'+urllib.parse.urlencode(params, doseq=True)
-        #print (myurl)
+        #myurl=self.dataset_entrypoints["concepts"]+'?'+urllib.parse.urlencode(params, doseq=True)
+        myurl=self.dataset_entrypoints["keyword"]+urllib.parse.quote_plus(mykw)
+        print (myurl)
         
-        with urllib.request.urlopen(myurl) as url:
+        with urllib.request.urlopen(myurl+'?perpage=100') as url:
             mdata = json.load(url)
         
         df_kw= pd.DataFrame(mdata["concepts"])
+        start=1
+        if not df_kw.empty:
+            pages=mdata['pages']
+            print (pages)
+            start+=1
+            mdx = pd.Series(range(start, pages+1), dtype=pd.StringDtype())
+            for var in mdx:
+                turl = myurl+"?page="+str(var)
+                try:
+                    with urllib.request.urlopen(turl+'&perpage=100') as murl:
+                        df_desc_par = json.load(murl)
+                        #df_concepts=df_concepts.append(pd.DataFrame(df_desc_par["concepts"]), ignore_index=True)
+                        df_kw=pd.concat([df_kw, pd.DataFrame(df_desc_par["concepts"])])
+                except:
+                            print(f'SEVERE: Error getting keyword properties. (Error loading {turl})')
         
         return df_kw
     
@@ -1113,7 +1129,6 @@ class MPData:
                 currentversion=row[category]['id']
                 statustool=dataset[dataset['persistentId']==toolpid]
                 oldkval=''
-                
               
                 for stindex, strow in statustool.iterrows():
                     
@@ -1128,11 +1143,11 @@ class MPData:
                             updateItem='True'
                             print (f'Changing the value of property:  "{ind["concept"]}", in item with pid: "{category}/{toolpid}", - position: {myrow["properties"].index(ind)} of {len(myrow["properties"])}\n(Log info: current version is: {currentversion})\n')
                             myrow['properties'].remove(ind);
-                    print(f' before {len(myrow["properties"])}');
+                    #print(f' before {len(myrow["properties"])}');
                     for newprop in updateList:
                         myrow['properties'].append(newprop)
+                        print(f' {newprop} appended');
                     
-                    print(f' after {len(myrow["properties"])}');   
                         #print(oldkval+' '+mykey)
                         
                         #
@@ -1157,7 +1172,6 @@ class MPData:
                         #         ind["concept"]=updateList["concept"]
                         #         updateItem=True
                     if updateItem and self.debug:
-                        #print(json.dumps(myrow))
                         print ('\n *** Running in DEBUG mode, Marketplace dataset not updated. *** \n')
                    
                     
