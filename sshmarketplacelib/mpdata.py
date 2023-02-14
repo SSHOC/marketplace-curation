@@ -1140,37 +1140,15 @@ class MPData:
                     myrow=row[category]
                     for ind in myrow['properties']:
                         if (('concept' in ind) and ("label" in ind["concept"]) and ind['concept']["code"]==oldkval and (ind["concept"]["label"]).lower()==filterList["concept"]):
-                            updateItem='True'
+                            
                             print (f'Changing the value of property:  "{ind["concept"]}", in item with pid: "{category}/{toolpid}", - position: {myrow["properties"].index(ind)} of {len(myrow["properties"])}\n(Log info: current version is: {currentversion})\n')
                             myrow['properties'].remove(ind);
+                            updateItem='True'
                     #print(f' before {len(myrow["properties"])}');
                     for newprop in updateList:
                         myrow['properties'].append(newprop)
                         print(f' {newprop} appended');
                     
-                        #print(oldkval+' '+mykey)
-                        
-                        #
-                        # for ind in myrow['properties']:
-                        #
-                        #
-                        #     if (('concept' in ind) and ("label" in ind["concept"]) and ind['concept']["code"]==oldkval and (ind["concept"]["label"]).lower()==filterList["concept"]): #was ind['concept']['code']==filterList["concept"]
-                        #
-                        #         #print (f'Changing the property:  "{mykey}", from  "{mykey}": {ind["type"]} \nto\n "{mykey}": {updateList[mykey]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
-                        #         print (f'Changing the value of property:  "{mykey}" to {updateList[mykey]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
-                        #
-                        #         print (f'Changing the property:  "concept", to "concept": {updateList["concept"]}", in item with pid: "{category}/{toolpid}"\n(Log info: current version is: {currentversion})\n')
-                        #         #Check if the property already exists
-                        #         #for insideind in myrow['properties']:
-                        #             # if (("concept" in insideind) and ("label" in insideind["concept"]) 
-                        #             #     and insideind[mykey]["code"]==updateList[mykey]["code"]
-                        #             #     and insideind["concept"]["code"]==updateList["concept"]["code"]):
-                        #             #
-                        #             #     print(f'ECCO {insideind["concept"]}')
-                        #
-                        #         ind[mykey]=updateList[mykey]
-                        #         ind["concept"]=updateList["concept"]
-                        #         updateItem=True
                     if updateItem and self.debug:
                         print ('\n *** Running in DEBUG mode, Marketplace dataset not updated. *** \n')
                    
