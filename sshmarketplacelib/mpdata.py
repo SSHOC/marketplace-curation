@@ -192,7 +192,7 @@ class MPData:
         params={'types':'keyword', 'q':urllib.parse.quote_plus(mykw)}
         #myurl=self.dataset_entrypoints["concepts"]+'?'+urllib.parse.urlencode(params, doseq=True)
         myurl=self.dataset_entrypoints["keyword"]+urllib.parse.quote_plus(mykw)
-        print (myurl)
+        #print (myurl)
         
         with urllib.request.urlopen(myurl+'?perpage=100') as url:
             mdata = json.load(url)
@@ -201,7 +201,7 @@ class MPData:
         start=1
         if not df_kw.empty:
             pages=mdata['pages']
-            print (pages)
+            #print (pages)
             start+=1
             mdx = pd.Series(range(start, pages+1), dtype=pd.StringDtype())
             for var in mdx:
@@ -1139,6 +1139,7 @@ class MPData:
                     oldkval=strow["concept.code"]
                     myrow=row[category]
                     for ind in myrow['properties']:
+                        #print(ind)
                         if (('concept' in ind) and ("label" in ind["concept"]) and ind['concept']["code"]==oldkval and (ind["concept"]["label"]).lower()==filterList["concept"]):
                             
                             print (f'Changing the value of property:  "{ind["concept"]}", in item with pid: "{category}/{toolpid}", - position: {myrow["properties"].index(ind)} of {len(myrow["properties"])}\n(Log info: current version is: {currentversion})\n')
@@ -1147,7 +1148,6 @@ class MPData:
                     #print(f' before {len(myrow["properties"])}');
                     for newprop in updateList:
                         myrow['properties'].append(newprop)
-                        print(f' {newprop} appended');
                     
                     if updateItem and self.debug:
                         print ('\n *** Running in DEBUG mode, Marketplace dataset not updated. *** \n')
