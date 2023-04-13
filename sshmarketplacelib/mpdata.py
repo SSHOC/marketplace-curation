@@ -280,6 +280,9 @@ class MPData:
         bearer=response.headers['Authorization']
         return bearer
     
+    def checkCredentials(self):
+        return self.getBearer();
+    
     def createURLCurationProperty(self, props, label, value):
         detail_value=props
         init_val="{'url': ["+" {'"+label+"': " + "'"+ value.strip() +"'}"+ "] }"
@@ -1334,6 +1337,57 @@ class MPData:
             return self.dataset_entrypoints['datasets']+'/'
         if(itemscategory=='actors'):
             return self.dataset_entrypoints['actors']+'/'
+    
+    def deleteKeyword(self, keywordcode):
+        if (keywordcode==''):
+            print('No keyword provided! No actions.')
+            return
+        res=pd.DataFrame()
+        restoreset=self._getLog()
+        bearer=self.getBearer()
+        updateItem=True
+        put_headers = {'Content-type': 'application/json', 'Authorization':bearer}
+       
+        print ('Deleting keyword '+str(keywordcode)+'...')
+        deleteurl='https://sshoc-marketplace-stage.acdh-dev.oeaw.ac.at/api/vocabularies/sshoc-keyword/concepts/'
+        print ('URL: '+deleteurl)
+        if not self.debug and updateItem:
+            delete_result=requests.delete(deleteurl, headers=put_headers)
+            print ('Result Status Code: ')
+            print (delete_result)
+            mitem=delete_result.text
+            print('Info:')
+            print (mitem)
+            print ('...done.')
+            return mitem
+        if self.debug:
+            print('...not executed, running in DEBUG mode.')
+            
+        return ''
+    
+    def deleteItem(self, category, itemId):
+        if (itemId==''):
+            print('No id provided! No actions.')
+            return
+        res=pd.DataFrame()
+        restoreset=self._getLog()
+        bearer=self.getBearer()
+        put_headers = {'Content-type': 'application/json', 'Authorization':bearer}
+        deleteurl=self.getPutEP(category)+itemId
+        print ('URL: '+deleteurl)
+        if not self.debug:
+            delete_result=requests.delete(deleteurl, headers=put_headers)
+            print ('Result Status Code: ')
+            print (delete_result)
+            mitem=delete_result.text
+            print('Info:')
+            print (mitem)
+            print ('...done.')
+            return mitem
+        if self.debug:
+            print('...not executed, running in DEBUG mode.')
+            
+        return ''
     
     #RESTORE ITEMS
     

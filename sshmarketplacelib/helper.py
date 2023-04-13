@@ -203,7 +203,7 @@ class Util(object):
                 dfs.append(items)
             else:
                 if not key=='actors' and not key=='list_of_properties' and not key=='login':
-                    print(f'{key} dataset is not present')
+                    print(f'{key} data is not present, skip...')
                 
         df_items= pd.concat(dfs, ignore_index=True)
         cols = df_items.columns.tolist()
