@@ -275,6 +275,7 @@ class MPData:
         headers = {'Content-type': 'application/json'}
 
         url=self.dataset_entrypoints['login']
+        
         response = requests.post(url, headers=headers, json={"username": self.userId, "password": self.passW})
         
         bearer=response.headers['Authorization']
@@ -1365,7 +1366,7 @@ class MPData:
             
         return ''
     
-    def deleteItem(self, category, itemId):
+    def deleteItem(self, category, itemId, force=False):
         if (itemId==''):
             print('No id provided! No actions.')
             return
@@ -1374,14 +1375,18 @@ class MPData:
         bearer=self.getBearer()
         put_headers = {'Content-type': 'application/json', 'Authorization':bearer}
         deleteurl=self.getPutEP(category)+itemId
+        if (force):
+            deleteurl=deleteurl+'?force=true'
         print ('URL: '+deleteurl)
         if not self.debug:
             delete_result=requests.delete(deleteurl, headers=put_headers)
             print ('Result Status Code: ')
             print (delete_result)
-            mitem=delete_result.text
+            mitem=delete_result
             print('Info:')
-            print (mitem)
+            print (delete_result.text)
+            # entryline={"date": _getdate(), "persistentId": itemId, "operation":"delete item"}
+            # restoreset=self._addLogentry(restoreset, entryline)
             print ('...done.')
             return mitem
         if self.debug:
