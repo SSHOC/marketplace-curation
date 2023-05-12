@@ -127,7 +127,7 @@ class MPData:
                 return returneditems
     
         #print (url)
-        df_desc_par=pd.read_json(url+'?perpage=20', orient='columns')
+        df_desc_par=pd.read_json(url+'?perpage=100', orient='columns')
         
         #df_desc=df_desc.append(df_desc_par, ignore_index=True)
         df_desc=pd.concat([df_desc, df_desc_par])
@@ -138,7 +138,7 @@ class MPData:
             mdx = pd.Series(range(start, pages+1))
             for var in mdx:
                 turl = url+"?page="+str(var)+"&perpage=100"
-                #print (f'{var} - {turl}')
+                #print (f'{df_desc.shape}, {var} - {turl}')
                 try:
                     df_desc_par=pd.read_json(turl, orient='columns')
                 except:
