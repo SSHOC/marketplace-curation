@@ -297,7 +297,7 @@ class Util(object):
                 df_items= pd.concat(df_temp_items, ignore_index=True)
                 df_properties=pd.concat(df_temp_properties, ignore_index=True)
         if (not df_items.empty) and (not df_properties.empty):
-            my_tmp=df_items[['persistentId','label', 'source.label', 'category']]
+            my_tmp=df_items[['persistentId','label', 'source.label', 'category', 'status']]
             df_list_of_properties_sources=pd.merge(left=df_properties, right=my_tmp, left_on='ts_label', right_on='label')
         else:
             return (pd.DataFrame())
