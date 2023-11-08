@@ -1177,6 +1177,93 @@ class MPData:
             print ('done!')        
             return res
     
+
+    def updateItemsUrls(self, dataset, updateList={}, filterList={}):
+        
+        """
+        Updates items by changing the content of the URL properties indicated in the updateList, the updated items are 
+        stored in in the MP.
+        
+        Parameters:
+        -----------
+        
+        dataset: DataFrame
+            The set of items to be updated
+        updateList: List
+            The list of URL properties and values 
+        filterList: List
+            The list of filters
+        When all items in the dataset have been updated the function synchronizes the local dataset with the MP data, 
+        it may take several minutes to complete.
+               
+        """
+        if (dataset.empty):
+            print('Empty data frame provided! No actions.')
+            return pd.DataFrame()
+        res=pd.DataFrame()
+        restoreset=self._getLog()
+        bearer=self.getBearer()
+        put_headers = {'Content-type': 'application/json', 'Authorization':bearer}
+        for key in self.dataset_entrypoints:
+            print(f'inspecting {key}')
+            if os.path.isfile('data/'+key+'.pickle') and not key=='actors':#local file is explicitly requested and one is available
+                df_categ_all = pd.read_pickle('data/'+key+'.pickle')
+                print(f'checking {key}...')
+            if df_categ_all.empty:
+                print('INFO:'+key+' local data not present, please download MP dataset...')
+                continue
+       
+            category=''
+            cnt=0;
+            for index, row in df_categ_all.iterrows():
+                
+                updateItem=False
+                category=df_categ_all.columns[-1]
+    
+                toolpid=row[category]['persistentId']
+                currentversion=row[category]['id']
+                statustool=dataset[dataset['persistentId']==toolpid]
+                oldkval=''
+                
+                for stindex, strow in statustool.iterrows():
+                    cnt+=1
+                    # print (f'pid {toolpid}, {row[category]["accessibleAt"]}')
+                    # filterList=strow['filterList']
+                    # updateList=strow['updateList']
+                    print(f" category: {strow['category']}, pid: {toolpid}")
+                    updateItem=False
+                    myrow=row[category]
+                    #print (f" urls in item {myrow['accessibleAt']}")
+                    print (f" wrong {strow['wrong_url']}")
+                    
+                    for ind  in myrow['accessibleAt']:
+                        if (ind==strow['wrong_url']):
+                            print(f' {ind}, {myrow["accessibleAt"].index(ind)}')
+                            indice=myrow["accessibleAt"].index(ind)
+                            myrow["accessibleAt"][indice]=strow['url']
+                            updateItem=True
+                            
+                    print (f" new URL list {myrow['accessibleAt']}")
+                    if updateItem and self.debug:
+                        print ('\n *** Running in DEBUG mode, dataset not updated. *** \n')
+                    if (not self.debug) and updateItem and category.strip()!='':
+                        print (f"updating item... ")
+                        obj = json.dumps(myrow)
+            
+                        put_result=requests.put(self.getPutEP(category)+toolpid, data=obj, headers=put_headers)
+                        print (put_result)
+                        entryline={"date": _getdate(), "persistentId": toolpid, "category":category,"restore_version":currentversion, "operation":"updateItemsProperties"}
+                        restoreset=self._addLogentry(restoreset, entryline)
+                        if (cnt%10==0):
+                            self._updateLog(restoreset)
+                        
+            if (not self.debug):
+                print ('Reloading data from MP server, please wait...')
+                self._getAllMPItems()
+                print ('...done!')
+        
+        
+    
     
     def getMergedItem(self, category, pids):
         res=pd.DataFrame()
