@@ -482,7 +482,7 @@ class Util(object):
                 df_prop_data_tmp=df_prop_data.groupby('ts_persistentId')[pr].apply(list).reset_index(name='temp')
                 df_prop_data_tmp[pr]=df_prop_data_tmp.temp.apply(lambda y: np.nan if pd.isnull(y).all() else y)
                 df_prop_data_tmp=df_prop_data_tmp.drop(columns='temp',axis=1)
-                df_items=pd.merge(df_items, df_prop_data_tmp, left_on='persistentId',right_on='ts_persistentId', how = 'outer').fillna(np.nan)
+                df_items=pd.merge(df_items, df_prop_data_tmp, left_on='persistentId',right_on='ts_persistentId', how = 'outer', suffixes=('', '_right')).fillna(np.nan)
                 
         # here dynamic properties
         not_found_properties=[]
