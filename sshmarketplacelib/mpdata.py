@@ -127,8 +127,8 @@ class MPData:
     
         #print (url)
         df_desc_par=pd.read_json(url+'?perpage=20', orient='columns')
-        
-        df_desc=df_desc.append(df_desc_par, ignore_index=True)
+
+        df_desc=pd.concat([df_desc, df_desc_par], ignore_index=True)
         if not df_desc.empty:
             if pages==0:
                 pages=df_desc.loc[0].pages
@@ -142,7 +142,7 @@ class MPData:
                 except:
                     print(f'SEVERE: Error getting {itemscategory}, items may be not completely loaded. (Error loading {turl})')
                     
-                df_desc=df_desc.append(df_desc_par, ignore_index=True)
+                df_desc=pd.concat([df_desc, df_desc_par], ignore_index=True)
             category=df_desc.columns[-1]
             items= pd.json_normalize(df_desc[category])
 
