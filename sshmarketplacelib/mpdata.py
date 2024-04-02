@@ -127,7 +127,7 @@ class MPData:
                 return returneditems
     
         #print (url)
-        df_desc_par=pd.read_json(url+'?perpage=50', orient='columns')
+        df_desc_par=pd.read_json(url+'?perpage=20', orient='columns')
         
         #df_desc=df_desc.append(df_desc_par, ignore_index=True)
         df_desc=pd.concat([df_desc, df_desc_par])
@@ -137,7 +137,7 @@ class MPData:
             start+=1
             mdx = pd.Series(range(start, pages+1))
             for var in mdx:
-                turl = url+"?page="+str(var)+"&perpage=50"
+                turl = url+"?page="+str(var)+"&perpage=20"
                 #print (f'{df_desc.shape}, {var} - {turl}')
                 try:
                     df_desc_par=pd.read_json(turl, orient='columns')
@@ -1177,7 +1177,107 @@ class MPData:
             print ('done!')        
             return res
     
-
+    def removeDuplicatedProperties(self, dataset, updateList={}, filterList={}):
+        
+        """
+        Removes duplicated properties from items, the updated items are 
+        stored in in the MP.
+        
+        Parameters:
+        -----------
+        
+        dataset: DataFrame
+            The set of items to be updated
+        When all items in the dataset have been updated the function synchronizes the local dataset with the MP data, 
+        it may take several minutes to complete.
+               
+        """
+        if (dataset.empty):
+            print('Empty data frame provided! No actions.')
+            return pd.DataFrame()
+        res=pd.DataFrame()
+        restoreset=self._getLog()
+        bearer=self.getBearer()
+        put_headers = {'Content-type': 'application/json', 'Authorization':bearer}
+        
+        
+        for key in self.dataset_entrypoints:
+            if os.path.isfile('data/'+key+'.pickle') and not key=='actors':#local file is explicitly requested and one is available
+                df_categ_all = pd.read_pickle('data/'+key+'.pickle')
+            if df_categ_all.empty:
+                print('INFO:'+key+' local data not present, please download MP dataset...')
+                continue
+       
+            category=''
+            cnt=0;
+            for index, row in df_categ_all.iterrows():
+                cnt+=1
+                updateItem=False
+                category=df_categ_all.columns[-1]
+    
+                toolpid=row[category]['persistentId']
+                currentversion=row[category]['id']
+                statustool=dataset[dataset['persistentId']==toolpid]
+                oldkval=''
+              
+                for stindex, strow in statustool.iterrows():
+                    
+                    #filterList=strow['filterList']
+                    #updateList=strow['updateList']
+                    
+                    updateItem=False
+            
+                    myrow=row[category]
+                    for mprop in strow['pDProps']:
+                        codelabel=mprop.split(':')[0]
+                        codeval=mprop.split(':')[1]
+                        print(f"Processing values: '{codelabel}: {codeval}'\n")
+                        removeIt=False
+                        tbremoved=[]
+                        for ind in myrow['properties']:
+                        
+                            if (('type' in ind) and ("code" in ind["type"]) and ind['type']["code"].lower()==codelabel and  ("code" in ind["concept"]) and ind['concept']["code"].lower()==codeval):
+                    
+                                if removeIt:
+                                    # print(f' in {toolpid}, remove {codelabel}: {codeval} \n')
+                                    # print(f"{ind} \n")
+                                    updateItem=True
+                                    #myrow['properties'].remove(ind);
+                                    tbremoved.append(ind)
+                                else:
+                                    print(f'in {toolpid}, DO NOT REMOVE THE FIRST OCCURRENCE of {codelabel}: {codeval}! \n')
+                                    removeIt=True
+                        for el in tbremoved:
+                            print(f' in {toolpid}, remove {codelabel}: {codeval} \n')
+                            print(f"{el} \n")
+                            myrow['properties'].remove(el);
+                    
+                    if updateItem and self.debug:
+                        print ('\n *** Running in DEBUG mode, Marketplace dataset not updated. *** \n')
+                   
+                    
+                    if (not self.debug) and updateItem and category.strip()!='':
+                        print (f"updating item... ")
+                        obj = json.dumps(myrow)
+                        
+                        put_result=requests.put(self.getPutEP(category)+toolpid, data=obj, headers=put_headers)
+                        print (put_result)
+                        entryline={"date": _getdate(), "persistentId": toolpid, "category":category,"restore_version":currentversion, "operation":"updateItemsProperties"}
+                        restoreset=self._addLogentry(restoreset, entryline)
+                        if (cnt%10==0):
+                            self._updateLog(restoreset)
+                
+        if not restoreset.empty:
+            self._updateLog(restoreset)
+            
+        if not self.debug:
+            print ('Reloading data from MP server, it may take many minutes to complete, please wait...')
+            self._getAllMPItems()
+            print ('done!')        
+            return res
+   
+    
+    
     def updateItemsUrls(self, dataset, updateList={}, filterList={}):
         
         """
