@@ -192,7 +192,7 @@ class MPData:
         params={'types':'keyword', 'q':urllib.parse.quote_plus(mykw)}
         #myurl=self.dataset_entrypoints["concepts"]+'?'+urllib.parse.urlencode(params, doseq=True)
         myurl=self.dataset_entrypoints["keyword"]+urllib.parse.quote_plus(mykw)
-        #print (myurl)
+        print (myurl)
         
         with urllib.request.urlopen(myurl+'?perpage=100') as url:
             mdata = json.load(url)
@@ -1142,14 +1142,18 @@ class MPData:
                     updateItem=False
                     oldkval=strow["concept.code"]
                     myrow=row[category]
+                    toberemoved=[]
+                    
                     for ind in myrow['properties']:
-                        #print(ind)
+                        
                         if (('concept' in ind) and ("label" in ind["concept"]) and ind['concept']["code"]==oldkval and (ind["concept"]["label"]).lower()==filterList["concept"]):
-                            
-                            print (f'Changing the value of property:  "{ind["concept"]}", in item with pid: "{category}/{toolpid}", - position: {myrow["properties"].index(ind)} of {len(myrow["properties"])}\n(Log info: current version is: {currentversion})\n')
-                            myrow['properties'].remove(ind);
-                            updateItem='True'
-                    #print(f' before {len(myrow["properties"])}');
+                            toberemoved.append(ind)
+                    #print(f' before {len (myrow["properties"])}');
+                    for wrongp in toberemoved:
+                        print (f'Changing the value of property:  "{wrongp["concept"]}", in item with pid: "{category}/{toolpid}", - position: {myrow["properties"].index(ind)} of {len(myrow["properties"])}\n(Log info: current version is: {currentversion})\n')
+                        myrow['properties'].remove(wrongp);
+                        updateItem='True'
+                    #print(f' after {len(myrow["properties"])}');
                     for newprop in updateList:
                         myrow['properties'].append(newprop)
                     
@@ -1172,7 +1176,7 @@ class MPData:
             self._updateLog(restoreset)
             
         if not self.debug:
-            print ('Reloading data from MP server, it may take many minutes to complete, please wait...')
+            print ('Reloading data from MP server, please wait...')
             self._getAllMPItems()
             print ('done!')        
             return res
@@ -1271,7 +1275,7 @@ class MPData:
             self._updateLog(restoreset)
             
         if not self.debug:
-            print ('Reloading data from MP server, it may take many minutes to complete, please wait...')
+            print ('Reloading data from MP server, please wait...')
             self._getAllMPItems()
             print ('done!')        
             return res
