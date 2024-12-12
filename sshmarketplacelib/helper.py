@@ -231,7 +231,7 @@ class Util(object):
         if df_items.empty:
             print('Empty dataset')
             return pd.DataFrame()
-        df_items['type.allowedVocabularies'] = df_items['type.allowedVocabularies'].apply(lambda y: np.nan if len(y)==0 else y)
+        df_items['type.allowedVocabularies'] = df_items['type.allowedVocabularies'].apply(lambda y: np.nan if (y==y and len(y)==0) else y)
         return df_items
     
     

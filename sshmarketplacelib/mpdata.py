@@ -1404,7 +1404,7 @@ class MPData:
    
         npid=0
         for upid in persistentids:
-            res['original_item_'+str(npid)]='<a target="_blank" href="'+self.MPserver+res['category']+'/'+upid+'">'+upid+'</a>'
+            res['original_item_'+str(npid)]='<a target="_blank" href="'+self.dw+res['category']+'/'+upid+'">'+upid+'</a>'
             npid+=1
         return res.T, jo
         
