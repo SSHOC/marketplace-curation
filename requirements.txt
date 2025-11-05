@@ -3,3 +3,7 @@ numpy
 requests
 PyYAML 
 bokeh
+matplotlib
+glob
+seaborn
+pyarrow
