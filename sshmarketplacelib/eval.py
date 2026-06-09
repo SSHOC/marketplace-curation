@@ -16,7 +16,7 @@ import multiprocessing
 from multiprocessing.pool import Pool
 import errno
 
-from . import mpdata as mpd
+import pathlib
 
 class URLCheck(object):
     '''
@@ -66,9 +66,15 @@ class URLCheck(object):
         self.url_all_properties=['accessibleAt','terms-of-use-url', 'access-policy-url', 'privacy-policy-url', 'see-also', 'user-manual-url', 'service-level-url', 'thumbnail']
         self.url_dynamic_properties=['terms-of-use-url', 'access-policy-url', 'privacy-policy-url', 'see-also', 'user-manual-url', 'service-level-url', 'thumbnail']
 
-        self.mpdata = mpd.MPData()
-        
-    
+
+    def _load_snapshot(self):
+        """Load the latest full_items_<ts>.json snapshot from the data directory."""
+        data_path = pathlib.Path(self.datadir)
+        existing = sorted(data_path.glob("full_items_*.json"), key=lambda p: p.stat().st_mtime)
+        if not existing:
+            raise FileNotFoundError(f"No full_items_*.json snapshots found in {self.datadir}")
+        return pd.read_json(existing[-1], orient="records")
+
     def getHTTP_Status(self, var):
         df_tool_work_aa_http_status = []
         regex = re.compile(
@@ -79,7 +85,7 @@ class URLCheck(object):
             r'(?::\d+)?' # optional port
             r'(?:/?|[/?]\S+)$', re.IGNORECASE)
         #print(f'URL: {var}')
-        if ( var != "" and var!=None and re.match(regex, var)):
+        if ( (var is not None) and var != "" and re.match(regex, var)):
             try:
                 #print(var)
                 r =requests.get(var,timeout=3)
@@ -101,7 +107,7 @@ class URLCheck(object):
                 df_tool_work_aa_http_status.append({'url': var, 'status': int(400)})
         else:
             # print(var ,0)
-            df_tool_work_aa_http_status = df_tool_work_aa_http_status.append({'url': var, 'status': int(400)})
+            df_tool_work_aa_http_status.append({'url': var, 'status': int(400)})
         return (df_tool_work_aa_http_status)
     
     
@@ -124,33 +130,27 @@ class URLCheck(object):
         """
         
         properties=[]
-        #df_urls=[]
-        dfs=[]
-        pool = Pool()
         cores=multiprocessing.cpu_count()
         if props.strip()!='':
             properties=props.replace(" ", "").split(',')
         else:
             properties=self.url_all_properties
-        if itemcategories.strip()!='':
+        df_all = self._load_snapshot()
+        if itemcategories.strip()=='all' or itemcategories.strip()=='':
+            df_items = df_all
+        else:
             categories=itemcategories.replace(" ", "").split(',')
             for ca in categories:
                 if ca.strip() not in self.allCategories:
                     print ('Wrong Category: '+ca)
-        else:
-            if itemcategories.strip()=='all':
-                categories=self.allCategories
-            else:
-                print ('No category defined!')
-                return
-        for cate in categories:
-            if os.path.isfile(self.datadir+cate+'.pickle'):
-                temp= pd.read_pickle(self.datadir+cate+'.pickle')
-                category=temp.columns[-1]
-                items= pd.json_normalize(temp[category])
-                dfs.append(items)
-        df_items= pd.concat(dfs)
-        df_prop_data=self.mpdata.getAllProperties()
+            df_items = df_all[df_all['category'].isin([c.strip() for c in categories])]
+        df_prop_data = pd.json_normalize(
+            data=df_items.to_dict(orient='records'),
+            record_path='properties',
+            meta_prefix='ts_',
+            meta=['label', 'persistentId', 'category'],
+            errors='ignore'
+        )
         df_url_work_all = pd.DataFrame (columns = ['persistentId','property','value'])
         pivotField='value'
         #print (pivotField)
@@ -183,10 +183,10 @@ class URLCheck(object):
                 listofresults=p.map(self.getHTTP_Status, df_urls)
         for el in listofresults:
             #print (el[0])
-            if (len(el)>0 and el[0]):
-                df_tool_work_aa_http_status=df_tool_work_aa_http_status.append(el[0], ignore_index=True)
-            else:
-                print (f'error {el}')
+            if (el and len(el)>0 and el[0]):
+                df_tool_work_aa_http_status=pd.concat([df_tool_work_aa_http_status, pd.DataFrame([el[0]])], ignore_index=True)
+            # else:
+            #     print (f'error {el}')
     
         df_http_status_sub=df_tool_work_aa_http_status[df_tool_work_aa_http_status['status'] != 1]
         #df_http_status_err=df_http_status_sub[df_http_status_sub['status'] != 200]
@@ -235,7 +235,13 @@ class URLCheck(object):
             print("Error: dataset must be a dataframe")
             return pd.DatFrame()
         df_items= dataset
-        df_prop_data=self.mpdata.getAllProperties()
+        df_prop_data = pd.json_normalize(
+            data=df_items.to_dict(orient='records'),
+            record_path='properties',
+            meta_prefix='ts_',
+            meta=['label', 'persistentId', 'category'],
+            errors='ignore'
+        )
         df_url_work_all = pd.DataFrame (columns = ['persistentId','property','value'])
         pivotField='value'
         #print (pivotField)
@@ -278,7 +284,7 @@ class URLCheck(object):
         for el in listofresults:
             #print (el)
             if el:
-                df_tool_work_aa_http_status=df_tool_work_aa_http_status.append(el[0], ignore_index=True)
+                df_tool_work_aa_http_status=pd.concat([df_tool_work_aa_http_status, pd.DataFrame([el[0]])], ignore_index=True)
         #end
         #return df_tool_work_aa_http_status
             
@@ -296,3 +302,44 @@ class URLCheck(object):
         return df_list_of_url_status[['MPUrl','persistentId', 'category', 'label', 'property','url', 'status']];
         
         
+## addition 2026
+
+def simple_URL_check(url):
+    if not url or url.strip()=='':
+        return int(400) #400 for empty or None
+    try:
+        r =requests.get(url,timeout=3)
+        return int(r.status_code)
+    except requests.exceptions.ConnectionError:
+        return int(503)
+    except requests.exceptions.ConnectTimeout:
+        return int(408)
+    except requests.exceptions.ReadTimeout:
+        return int(408)
+    except requests.exceptions.RequestException:
+        return int(500)
+    except TypeError:
+        print('TypeError')
+        return int(400)
+    
+#async version of simple_URL_check using aiohttp
+import aiohttp
+import asyncio
+import nest_asyncio
+async def async_URL_check(url):
+    if not url or url.strip()=='':
+        return int(400) #400 for empty or None
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=3) as response:
+                return int(response.status)
+    except aiohttp.ClientConnectionError:
+        return int(503)
+    except asyncio.TimeoutError:
+        return int(408)
+    except aiohttp.ClientError:
+        return int(500)
+    except TypeError:
+        print('TypeError')
+        return int(400)
+    
