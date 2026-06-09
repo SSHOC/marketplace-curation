@@ -5,7 +5,7 @@ A Python library and set of Jupyter notebooks for the SSH Open Marketplace edito
 | Component | Purpose | Location |
 |-----------|---------|----------|
 | **Curation Notebooks** *(this repo)* | Hands-on exploration and understanding of MP data; export tables for review | `marketplace-curation/` |
-| **SSHOMPitor Dashboard** | Automated regular quality monitoring with exportable reports | separate repo |
+| **SSHOMPitor Dashboard** | Automated regular quality monitoring with exportable reports | [sshoc.github.io/sshompitor](https://sshoc.github.io/sshompitor/dashboard_output/metadata_dashboard_table.html) |
 | **Curation Toolkit** | Complex write-back operations — delete/merge actors, anything requiring authentication | separate repo |
 
 ---
@@ -212,8 +212,22 @@ pip install ./ -r ./requirements.txt
 
 **Configuration:**
 
-1. Copy `config.yaml.template` to `config.yaml` and fill in your API credentials and server URL.
+1. Copy `config.yaml.example` to `config.yaml` and fill in your API credentials and server URL.
 2. Create a `data/` directory next to your notebooks.
 3. Keep `DEBUG: True` (the default) while exploring. Set `DEBUG: False` only when you intend to write back to the live API.
+
+```yaml
+DEBUG: True   # set to False to enable write-back operations
+
+API:
+  SERVER: https://marketplace-api.sshopencloud.eu/
+  USER: your-username
+  PASSWORD: your-password
+
+MARKETPLACE:
+  SERVER: https://marketplace.sshopencloud.eu/
+```
+
+The `DATASET_ENTRYPOINTS`, `CATEGORIES`, `CATEGORY_FILTER_VALUES`, and `EMPTY_DESCRIPTION_VAL` sections in the example file should not need to be changed.
 
 **Dependencies:** `pandas`, `numpy`, `requests`, `PyYAML`, `bokeh`
