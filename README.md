@@ -6,7 +6,7 @@ A Python library and set of Jupyter notebooks for the SSH Open Marketplace edito
 |-----------|---------|----------|
 | **Curation Notebooks** *(this repo)* | Hands-on exploration and understanding of MP data; export tables for review | `marketplace-curation/` |
 | **SSHOMPitor Dashboard** | Automated regular quality monitoring with exportable reports | [sshoc.github.io/sshompitor](https://sshoc.github.io/sshompitor/dashboard_output/metadata_dashboard_table.html) |
-| **Curation Toolkit** | Complex write-back operations — delete/merge actors, anything requiring authentication | https://github.com/mkrzmr/curation-toolkit |
+| **Curation Toolkit** | Complex write-back operations — delete/merge actors, anything requiring authentication | [https://github.com/mkrzmr/curation-toolkit](https://github.com/SSHOC/curation-toolkit) |
 
 ---
 
